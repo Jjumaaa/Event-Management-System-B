@@ -3,7 +3,7 @@ from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
 from flask_restful import Api
 from config import db, bcrypt
-from models import User, Term, Grade, Comment
+from models import User, Event, Registration
 from datetime import datetime
 import os
 # from flask_cors import CORS
