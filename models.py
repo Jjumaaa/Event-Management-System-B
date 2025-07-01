@@ -3,15 +3,24 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_serializer import SerializerMixin
 from config import db, bcrypt
 from datetime import datetime
+import enum
+from sqlalchemy import Enum
+
+class UserRole(enum.Enum):
+    admin = 'admin'
+    attendee = 'attendee'
 
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
     # serialize_rules = ('-terms.user', '-grades.user',)
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), nullable=False, unique=True)
     email = db.Column(db.String, unique=True, nullable=True)
-    _password_hash = db.Column(db.String, nullable=True) 
+    _password_hash = db.Column(db.String, nullable=True)
+    profile_picture = db.Column(db.String(255), nullable=True)
+    
+    role = db.Column(Enum(UserRole), nullable=False, nullable=False, default=UserRole.attendee)
+
 
     @validates('email')
     def validate_email(self, key, email):
