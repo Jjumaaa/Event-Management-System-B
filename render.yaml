@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: flask-recipe-app
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: DATABASE_URL
+        value: sqlite:///tima.db
+      - key: JWT_SECRET_KEY
+        value: super-secret-key
+      - key: SECRET_KEY
+        value: shhh-very-secret
