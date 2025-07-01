@@ -6,10 +6,18 @@ from config import db, bcrypt
 from models import User, Event, Registration
 from datetime import datetime
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
+# CORS(app,
+#      origins=[
+#          "http://localhost:3000",
+#          "https://tima-frontend-7hke.vercel.app"
+#      ],
+#      supports_credentials=True)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tima.db'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['JWT_SECRET_KEY'] = 'super-secret-key'
 app.secret_key = 'shhh-very-secret'
@@ -245,4 +253,4 @@ def handle_registration(id):
     return {}, 204
 
 if __name__ == '__main__':
-    app.run(port=5555, debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 10000)))
