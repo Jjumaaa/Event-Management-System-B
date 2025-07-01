@@ -21,9 +21,9 @@ jwt = JWTManager(app)
 
 @app.route('/')
 def notice():
-    return "Hey there, I just want to let you know that this URL is working 💋... Cristina;)"
+    return "Hey there, I just want to let you know that this URL is working 💋... Cristina ;)"
 
-@app.post('/auth/register')
+@app.post('/register')
 def register():
     data = request.get_json()
     email = data.get('email')
@@ -39,9 +39,12 @@ def register():
     db.session.add(user)
     db.session.commit()
 
-    return user.to_dict(), 201
+    return {
+        'id': user.id,
+        'email': user.email
+    }, 201
 
-@app.post('/auth/login')
+@app.post('/login')
 def login():
     data = request.get_json()
     email = data.get('email')
@@ -50,32 +53,59 @@ def login():
 
     if user and user.authenticate(password):
         token = create_access_token(identity=user.id)
-        return {'token': token, 'user': user.to_dict()}, 200
+        return {
+            'token': token,
+            'user': {
+                'id': user.id,
+                'email': user.email
+            }
+        }, 200
     return {'error': 'Invalid credentials'}, 401
 
-@app.get('/auth/me')
+@app.get('/me')
 @jwt_required()
 def get_current_user():
     user_id = get_jwt_identity()
     user = User.query.get(user_id)
-    return user.to_dict(), 200
+    return {
+        'id': user.id,
+        'email': user.email
+    }, 200
 
 @app.route('/users', methods=['GET', 'POST'])
 def handle_users():
     if request.method == 'GET':
-        return jsonify([u.to_dict() for u in User.query.all()])
+        users = User.query.all()
+        users_data = []
+        for user in users:
+            users_data.append({
+                'id': user.id,
+                'email': user.email,
+                'registrations': [r.id for r in user.registrations],
+                'events': [e.id for e in user.events]
+            })
+        return jsonify(users_data), 200
+
     data = request.get_json()
     user = User(email=data.get('email'))
     user.password_hash = data.get('password')
     db.session.add(user)
     db.session.commit()
-    return user.to_dict(), 201
+    return {
+        'id': user.id,
+        'email': user.email
+    }, 201
 
 @app.route('/users/<int:id>', methods=['GET', 'PATCH', 'DELETE'])
 def handle_user(id):
     user = User.query.get_or_404(id)
     if request.method == 'GET':
-        return user.to_dict(), 200
+        return {
+            'id': user.id,
+            'email': user.email,
+            'registrations': [r.id for r in user.registrations],
+            'events': [e.id for e in user.events]
+        }, 200
     if request.method == 'PATCH':
         data = request.get_json()
         if 'email' in data:
@@ -83,7 +113,10 @@ def handle_user(id):
         if 'password' in data:
             user.password_hash = data['password']
         db.session.commit()
-        return user.to_dict(), 200
+        return {
+            'id': user.id,
+            'email': user.email
+        }, 200
     db.session.delete(user)
     db.session.commit()
     return {}, 204
@@ -92,7 +125,18 @@ def handle_user(id):
 @jwt_required()
 def handle_events():
     if request.method == 'GET':
-        return jsonify([e.to_dict() for e in Event.query.all()])
+        events = Event.query.all()
+        return jsonify([
+            {
+                'id': e.id,
+                'title': e.title,
+                'description': e.description,
+                'location': e.location,
+                'category': e.category,
+                'organizer_id': e.organizer_id
+            } for e in events
+        ]), 200
+
     data = request.get_json()
     user_id = get_jwt_identity()
     event = Event(
@@ -104,21 +148,42 @@ def handle_events():
     )
     db.session.add(event)
     db.session.commit()
-    return event.to_dict(), 201
+    return {
+        'id': event.id,
+        'title': event.title,
+        'description': event.description,
+        'location': event.location,
+        'category': event.category,
+        'organizer_id': event.organizer_id
+    }, 201
 
 @app.route('/events/<int:id>', methods=['GET', 'PATCH', 'DELETE'])
 @jwt_required()
 def handle_event(id):
     event = Event.query.get_or_404(id)
     if request.method == 'GET':
-        return event.to_dict(), 200
+        return {
+            'id': event.id,
+            'title': event.title,
+            'description': event.description,
+            'location': event.location,
+            'category': event.category,
+            'organizer_id': event.organizer_id
+        }, 200
     if request.method == 'PATCH':
         data = request.get_json()
         for attr in ['title', 'description', 'location', 'category']:
             if attr in data:
                 setattr(event, attr, data[attr])
         db.session.commit()
-        return event.to_dict(), 200
+        return {
+            'id': event.id,
+            'title': event.title,
+            'description': event.description,
+            'location': event.location,
+            'category': event.category,
+            'organizer_id': event.organizer_id
+        }, 200
     db.session.delete(event)
     db.session.commit()
     return {}, 204
@@ -127,7 +192,16 @@ def handle_event(id):
 @jwt_required()
 def handle_registrations():
     if request.method == 'GET':
-        return jsonify([r.to_dict() for r in Registration.query.all()])
+        registrations = Registration.query.all()
+        return jsonify([
+            {
+                'id': r.id,
+                'user_id': r.user_id,
+                'event_id': r.event_id,
+                'registration_status': r.registration_status
+            } for r in registrations
+        ]), 200
+
     data = request.get_json()
     user_id = get_jwt_identity()
     registration = Registration(
@@ -137,20 +211,35 @@ def handle_registrations():
     )
     db.session.add(registration)
     db.session.commit()
-    return registration.to_dict(), 201
+    return {
+        'id': registration.id,
+        'user_id': registration.user_id,
+        'event_id': registration.event_id,
+        'registration_status': registration.registration_status
+    }, 201
 
 @app.route('/registrations/<int:id>', methods=['GET', 'PATCH', 'DELETE'])
 @jwt_required()
 def handle_registration(id):
     reg = Registration.query.get_or_404(id)
     if request.method == 'GET':
-        return reg.to_dict(), 200
+        return {
+            'id': reg.id,
+            'user_id': reg.user_id,
+            'event_id': reg.event_id,
+            'registration_status': reg.registration_status
+        }, 200
     if request.method == 'PATCH':
         data = request.get_json()
         if 'registration_status' in data:
             reg.registration_status = data['registration_status']
         db.session.commit()
-        return reg.to_dict(), 200
+        return {
+            'id': reg.id,
+            'user_id': reg.user_id,
+            'event_id': reg.event_id,
+            'registration_status': reg.registration_status
+        }, 200
     db.session.delete(reg)
     db.session.commit()
     return {}, 204
