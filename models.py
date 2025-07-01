@@ -10,6 +10,7 @@ class UserRole(enum.Enum):
     admin = 'admin'
     attendee = 'attendee'
 
+
 class User(db.Model, SerializerMixin):
     __tablename__ = 'users'
     # serialize_rules = ('-terms.user', '-grades.user',)
@@ -41,5 +42,34 @@ class User(db.Model, SerializerMixin):
 
     def __repr__(self):
         return f"<User {self.username} (id={self.id})>"
+    
+
+class Event(db.Model, SerializerMixin):
+    __tablename__ = 'events'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullanle=False )
+    description = db.Column(db.String, default=datetime.utcnow)
+    time = db.Column(db.Integer, default=datetime.utcnow, onupdate=datetime.utcnow)
+    loctaion = db.Column(db.String,nullable=False)
+    category = db.Column(db.String)
+    organizer_id = db.Column(db.Integer,ForeignKey=True)
+
+
+
+
+class Registration(db.Model, SerializerMixin):
+    __tablename__ = 'registrations'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id =db.Column(db.Integer, ForeignKey=True)
+    event_id=db.Column(db.Integer, ForeignKey=True)
+    registration_status = db.Column(
+        Enum("confirmed", "pending", "unsuccessful", name="status_enum"),
+        nullable=False,
+        default="pending"
+    )
+
+    
 
   
