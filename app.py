@@ -28,7 +28,7 @@ jwt = JWTManager(app)
 
 @app.route('/')
 def notice():
-    return "Hey there, I just want to let you know that this URL is working 💋"
+    return "Hey there, I just want to let you know that this URL is working 💋... Cristina;)"
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
